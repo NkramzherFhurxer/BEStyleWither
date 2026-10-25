@@ -1,22 +1,12 @@
+
 plugins {
-    id 'dev.architectury.loom' version '1.7-SNAPSHOT' apply false
-    id 'architectury-plugin' version '3.4-SNAPSHOT'
-    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
-    id 'org.jetbrains.changelog' version "2.0.0"
+    id 'dev.architectury.loom-no-remap' version '1.17-SNAPSHOT' apply false
+    id 'architectury-plugin' version '3.5-SNAPSHOT'
+    id 'com.gradleup.shadow' version '9.6.1' apply false
 }
 
 architectury {
     minecraft = project.minecraft_version
-}
-
-changelog {
-    repositoryUrl = rootProject.repository_url
-    introduction = """
-    Changelog to track updates for this mod.  
-    Add your changes to Unreleased if you want to commit.  
-    Please write according to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
-    """
-    combinePreReleases = false
 }
 
 allprojects {
@@ -25,7 +15,7 @@ allprojects {
 }
 
 subprojects {
-    apply plugin: 'dev.architectury.loom'
+    apply plugin: 'dev.architectury.loom-no-remap'
     apply plugin: 'architectury-plugin'
     apply plugin: 'maven-publish'
 
@@ -33,22 +23,18 @@ subprojects {
         archivesName = "$rootProject.archives_name-$project.name"
     }
 
-    repositories {
-    }
-
     dependencies {
         minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
-        mappings loom.officialMojangMappings()
     }
 
     java {
         withSourcesJar()
-
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
 
     tasks.withType(JavaCompile).configureEach {
-        it.options.release = 21
+        options.release = 25
+        options.encoding = 'UTF-8'
     }
 }
