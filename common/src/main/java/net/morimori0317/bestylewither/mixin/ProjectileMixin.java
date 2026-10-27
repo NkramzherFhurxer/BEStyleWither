@@ -4,7 +4,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.entity.projectile.WitherSkull;
+import net.minecraft.world.entity.projectile.hurtingprojectile.WitherSkull;
 import net.morimori0317.bestylewither.entity.WitherSkullModification;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
