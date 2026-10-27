@@ -1,6 +1,6 @@
 package net.morimori0317.bestylewither.entity;
 
-import net.minecraft.world.entity.projectile.WitherSkull;
+import net.minecraft.world.entity.projectile.hurtingprojectile.WitherSkull;
 import net.morimori0317.bestylewither.BEStyleWither;
 
 public class WitherSkullModification {
