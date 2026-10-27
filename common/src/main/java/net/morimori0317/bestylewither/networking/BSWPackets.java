@@ -4,14 +4,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.morimori0317.bestylewither.BEStyleWither;
 import net.morimori0317.bestylewither.entity.BEWitherBoss;
 import net.morimori0317.bestylewither.entity.goal.WitherChargeAttackGoal;
 import org.jetbrains.annotations.NotNull;
 
 public class BSWPackets {
-    public static final CustomPacketPayload.Type<WitherChargeMessage> WHITHER_CHARGE_TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(BEStyleWither.MODID, "whither_charge"));
+    public static final CustomPacketPayload.Type<WitherChargeMessage> WHITHER_CHARGE_TYPE = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(BEStyleWither.MODID, "whither_charge"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, WitherChargeMessage> WITHER_CHARGE_CODEC = new StreamCodec<>() {
         @Override
