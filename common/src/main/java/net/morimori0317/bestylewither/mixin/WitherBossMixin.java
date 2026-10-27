@@ -73,7 +73,7 @@ public abstract class WitherBossMixin implements BEWitherBoss {
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
     private void readAdditionalSaveDataInject(CompoundTag compoundTag, CallbackInfo ci) {
-        CompoundTag tag = compoundTag.getCompound("BEStyleWitherData");
+        CompoundTag tag = compoundTag.getCompoundOrEmpty("BEStyleWitherData");
         beStyleWither$witherBossInstance.loadFromTag(tag);
     }
 
