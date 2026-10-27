@@ -39,9 +39,9 @@ public final class WitherBossInstance {
     }
 
     public void loadFromTag(CompoundTag tag) {
-        setOnceWeakened(tag.getBoolean("OnceWeakened"));
-        setHalfHealthExploded(tag.getBoolean("HalfHealthExploded"));
-        setSkipLootDrop(tag.getBoolean("SkipLootDrop"));
+       setOnceWeakened(tag.getBooleanOr("OnceWeakened", false));
+setHalfHealthExploded(tag.getBooleanOr("HalfHealthExploded", false));
+setSkipLootDrop(tag.getBooleanOr("SkipLootDrop", false));
     }
 
     public int getChargeCoolDown() {
