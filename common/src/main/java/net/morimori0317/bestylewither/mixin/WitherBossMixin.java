@@ -7,18 +7,21 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
-import net.minecraft.world.entity.monster.WitherSkeleton;
+import net.minecraft.world.entity.monster.skeleton.WitherSkeleton;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.LevelEvent;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.morimori0317.bestylewither.BEStyleWither;
@@ -65,20 +68,21 @@ public abstract class WitherBossMixin implements BEWitherBoss {
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
-    private void addAdditionalSaveDataInject(CompoundTag compoundTag, CallbackInfo ci) {
+    private void addAdditionalSaveDataInject(ValueOutput output, CallbackInfo ci) {
         CompoundTag tag = new CompoundTag();
         beStyleWither$witherBossInstance.saveToTag(tag);
-        compoundTag.put("BEStyleWitherData", tag);
+        output.store("BEStyleWitherData", CompoundTag.CODEC, tag);
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
-    private void readAdditionalSaveDataInject(CompoundTag compoundTag, CallbackInfo ci) {
-        CompoundTag tag = compoundTag.getCompoundOrEmpty("BEStyleWitherData");
+    private void readAdditionalSaveDataInject(ValueInput input, CallbackInfo ci) {
+        CompoundTag tag = input.read("BEStyleWitherData", CompoundTag.CODEC)
+                .orElseGet(CompoundTag::new);
         beStyleWither$witherBossInstance.loadFromTag(tag);
     }
 
-    @Inject(method = "customServerAiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Monster;customServerAiStep()V", shift = At.Shift.AFTER))
-    private void customServerAiStepInject(CallbackInfo ci) {
+    @Inject(method = "customServerAiStep", at = @At("TAIL"))
+    private void customServerAiStepInject(ServerLevel level, CallbackInfo ci) {
         if (isPowered() && !beStyleWither$witherBossInstance.isOnceWeakened()) {
             beStyleWither$witherBossInstance.setOnceWeakened(true);
         }
@@ -176,7 +180,7 @@ public abstract class WitherBossMixin implements BEWitherBoss {
     }
 
     @Inject(method = "customServerAiStep", at = @At("TAIL"))
-    private void customServerAiStepInject2(CallbackInfo ci) {
+    private void customServerAiStepInject2(ServerLevel level, CallbackInfo ci) {
         if (!BEStyleWither.getConfig().isEnableExplodeByHalfHealth() || beStyleWither$witherBossInstance.isHalfHealthExploded()) {
             beStyleWither$witherBossInstance.setHalfHealthExplodeFallTick(0);
             beStyleWither$witherBossInstance.setHalfHealthExplodeElapsedTick(0);
@@ -216,9 +220,14 @@ public abstract class WitherBossMixin implements BEWitherBoss {
                     int numOfSpawn = randomSource.nextBoolean() ? 4 : 3;
 
                     for (int i = 0; i < numOfSpawn; i++) {
-                        WitherSkeleton ws = new WitherSkeleton(EntityType.WITHER_SKELETON, ths.level());
+                        WitherSkeleton ws = new WitherSkeleton(EntityTypes.WITHER_SKELETON, ths.level());
                         ws.moveTo(ths.getX(), ths.getY(), ths.getZ(), randomSource.nextFloat() * 360.0F, 0.0F);
-                        ws.finalizeSpawn((ServerLevelAccessor) ths.level(), ths.level().getCurrentDifficultyAt(ths.blockPosition()), MobSpawnType.MOB_SUMMONED, null);
+                        ws.finalizeSpawn(
+                                (ServerLevelAccessor) ths.level(),
+                                ((ServerLevel) ths.level()).getCurrentDifficultyAt(ths.blockPosition()),
+                                EntitySpawnReason.MOB_SUMMONED,
+                                null
+                        );
                         ths.level().addFreshEntity(ws);
                     }
                 }
