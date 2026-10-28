@@ -1,11 +1,10 @@
 package net.morimori0317.bestylewither.mixin.client;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.WitherBossModel;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.monster.wither.WitherBossModel;
+import net.minecraft.client.renderer.entity.state.WitherRenderState;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.boss.wither.WitherBoss;
-import net.morimori0317.bestylewither.entity.BEWitherBoss;
+import net.morimori0317.bestylewither.client.BSWWitherRenderState;
 import net.morimori0317.bestylewither.entity.goal.WitherChargeAttackGoal;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,32 +14,25 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(WitherBossModel.class)
-public class WitherBossModelMixin<T extends WitherBoss> {
-    @Shadow
-    @Final
-    private ModelPart ribcage;
+public abstract class WitherBossModelMixin {
+    @Shadow @Final private ModelPart ribcage;
+    @Shadow @Final private ModelPart tail;
 
-    @Shadow
-    @Final
-    private ModelPart tail;
-
-    // ChargeAttack
-
-    @Inject(method = "setupAnim(Lnet/minecraft/world/entity/boss/wither/WitherBoss;FFFFF)V", at = @At("TAIL"))
-    private void setupAnim(T witherBoss, float f, float g, float h, float i, float j, CallbackInfo ci) {
-        Minecraft mc = Minecraft.getInstance();
-        float delta = mc.getTimer().getGameTimeDeltaPartialTick(true);
-        float ch = ((BEWitherBoss) witherBoss).beStyleWither$getInstance().getClientChargeTick(delta);
-        float cp = ch / ((float) WitherChargeAttackGoal.CHARGE_TIME);
+    // 26.3 models are driven by WitherRenderState rather than WitherBoss entities.
+    @Inject(method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/WitherRenderState;)V", at = @At("TAIL"))
+    private void beStyleWither$chargePose(WitherRenderState state, CallbackInfo ci) {
+        float chargeTicks = ((BSWWitherRenderState) state).beStyleWither$getChargeTicks();
+        float cp = chargeTicks / (float) WitherChargeAttackGoal.CHARGE_TIME;
         cp = Math.abs(-0.5f + cp);
-        cp = 1f - cp / 0.5f;
+        cp = 1.0f - cp / 0.5f;
         cp = Math.min(cp, 0.3f) / 0.3f;
-        float val = 47f * cp;
-        if (val > 0) {
-            float b = -(float) Math.PI * 2f / 360f;
-            this.ribcage.xRot += -val * b;
-            this.tail.setPos(-2.0F, 6.9F + Mth.cos(this.ribcage.xRot) * 10.0F, -0.5F + Mth.sin(this.ribcage.xRot) * 10.0F);
-            this.tail.xRot += -val * b;
+        float degrees = 47.0f * cp;
+        if (degrees > 0.0f) {
+            float radiansPerDegree = -(float) Math.PI / 180.0f;
+            this.ribcage.xRot += -degrees * radiansPerDegree;
+            this.tail.setPos(-2.0F, 6.9F + Mth.cos(this.ribcage.xRot) * 10.0F,
+                    -0.5F + Mth.sin(this.ribcage.xRot) * 10.0F);
+            this.tail.xRot += -degrees * radiansPerDegree;
         }
     }
 }

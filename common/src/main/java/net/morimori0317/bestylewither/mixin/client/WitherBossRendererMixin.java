@@ -2,11 +2,14 @@ package net.morimori0317.bestylewither.mixin.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.entity.WitherBossRenderer;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.entity.state.WitherRenderState;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.morimori0317.bestylewither.BEStyleWither;
-import net.morimori0317.bestylewither.util.BEStyleWitherUtils;
+import net.morimori0317.bestylewither.client.BSWWitherRenderState;
+import net.morimori0317.bestylewither.entity.BEWitherBoss;
+import net.morimori0317.bestylewither.entity.WitherBossInstance;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -16,41 +19,36 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(WitherBossRenderer.class)
-public class WitherBossRendererMixin {
+public abstract class WitherBossRendererMixin {
+    @Shadow @Final private static Identifier WITHER_INVULNERABLE_LOCATION;
 
-    @Shadow
-    @Final
-    private static ResourceLocation WITHER_INVULNERABLE_LOCATION;
-
-    // EnableExplodeByDie
-
-    @Inject(method = "scale(Lnet/minecraft/world/entity/boss/wither/WitherBoss;Lcom/mojang/blaze3d/vertex/PoseStack;F)V", at = @At("TAIL"))
-    private void scaleInject(WitherBoss witherBoss, PoseStack poseStack, float f, CallbackInfo ci) {
-        if (!BEStyleWither.getConfig().isEnableExplodeByDie()) {
-            return;
-        }
-
-        float wd = BEStyleWitherUtils.getWitherDeltaDeathTime(witherBoss, f);
-        if (wd > 0) {
-            float wd2 = wd + 2f;
-            float h = 1.0F + Mth.sin(wd2 * (wd2 / 20f) * 100f) * wd2 * 0.0075F;
-            wd = Mth.clamp(wd, 0.0F, 1.0F);
-            wd *= wd;
-            wd *= wd;
-            float i = (1.0F + wd * 0.4F) * h;
-            float j = (1.0F + wd * 0.1F) / h;
-
-            poseStack.scale(i, j, i);
-        }
+    @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/boss/wither/WitherBoss;Lnet/minecraft/client/renderer/entity/state/WitherRenderState;F)V", at = @At("TAIL"))
+    private void beStyleWither$extractAnimation(WitherBoss wither, WitherRenderState state, float partialTicks, CallbackInfo ci) {
+        WitherBossInstance instance = ((BEWitherBoss) wither).beStyleWither$getInstance();
+        BSWWitherRenderState extra = (BSWWitherRenderState) state;
+        extra.beStyleWither$setChargeTicks(instance.getClientChargeTick(partialTicks));
+        extra.beStyleWither$setDeathEnergyVisible(instance.isExplodeByDieEnergyLayerVisible());
+        extra.beStyleWither$setDeathProgress(Math.max(0.0f, (wither.deathTime + partialTicks - 1.0f) / 28.0f));
     }
 
-    @Inject(method = "getTextureLocation(Lnet/minecraft/world/entity/boss/wither/WitherBoss;)Lnet/minecraft/resources/ResourceLocation;", at = @At("RETURN"), cancellable = true)
-    public void getTextureLocationInject(WitherBoss witherBoss, CallbackInfoReturnable<ResourceLocation> cir) {
-        if (!BEStyleWither.getConfig().isEnableExplodeByDie()) {
-            return;
-        }
+    @Inject(method = "scale(Lnet/minecraft/client/renderer/entity/state/WitherRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;)V", at = @At("TAIL"))
+    private void beStyleWither$deathScale(WitherRenderState state, PoseStack poseStack, CallbackInfo ci) {
+        if (!BEStyleWither.getConfig().isEnableExplodeByDie()) return;
+        float deathProgress = ((BSWWitherRenderState) state).beStyleWither$getDeathProgress();
+        if (deathProgress <= 0) return;
+        float wd2 = deathProgress + 2.0f;
+        float pulse = 1.0F + Mth.sin(wd2 * (wd2 / 20.0f) * 100.0f) * wd2 * 0.0075F;
+        float power = Mth.clamp(deathProgress, 0.0F, 1.0F);
+        power *= power;
+        power *= power;
+        float width = (1.0F + power * 0.4F) * pulse;
+        float height = (1.0F + power * 0.1F) / pulse;
+        poseStack.scale(width, height, width);
+    }
 
-        if (witherBoss.deathTime > 0) {
+    @Inject(method = "getTextureLocation(Lnet/minecraft/client/renderer/entity/state/WitherRenderState;)Lnet/minecraft/resources/Identifier;", at = @At("RETURN"), cancellable = true)
+    private void beStyleWither$deathTexture(WitherRenderState state, CallbackInfoReturnable<Identifier> cir) {
+        if (BEStyleWither.getConfig().isEnableExplodeByDie() && state.deathTime > 0.0f) {
             cir.setReturnValue(WITHER_INVULNERABLE_LOCATION);
         }
     }

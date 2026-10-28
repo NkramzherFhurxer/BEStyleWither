@@ -1,68 +1,28 @@
 package net.morimori0317.bestylewither.mixin.client;
 
-import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.entity.state.WitherRenderState;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.morimori0317.bestylewither.BEStyleWither;
-import net.morimori0317.bestylewither.util.BEStyleWitherUtils;
-import org.joml.Quaternionf;
+import net.morimori0317.bestylewither.client.BSWWitherRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntityRenderer.class)
-public class LivingEntityRendererMixin<T extends LivingEntity, M extends EntityModel<T>> {
-
-    // SpinAndWhiteSummon
-
-    @Inject(method = "getWhiteOverlayProgress", at = @At("RETURN"), cancellable = true)
-    private void getWhiteOverlayProgressInject(T livingEntity, float f, CallbackInfoReturnable<Float> cir) {
-        if (BEStyleWither.getConfig().isEnableSpinAndWhiteSummon() && livingEntity instanceof WitherBoss witherBoss) {
-            int i = witherBoss.getInvulnerableTicks();
-            if (i > 80) {
-                cir.setReturnValue(Mth.clamp(1f - ((100 - i) / 20f), 0f, 1f));
-            }
+public abstract class LivingEntityRendererMixin {
+    // The 26.3 renderer takes LivingEntityRenderState, not an entity.
+    @Inject(method = "getWhiteOverlayProgress(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;)F", at = @At("RETURN"), cancellable = true)
+    private void beStyleWither$overlay( LivingEntityRenderState state, CallbackInfoReturnable<Float> cir) {
+        if (!(state instanceof WitherRenderState wither)) return;
+        if (BEStyleWither.getConfig().isEnableSpinAndWhiteSummon() && wither.invulnerableTicks > 80.0f) {
+            cir.setReturnValue(Mth.clamp(1.0f - (100.0f - wither.invulnerableTicks) / 20.0f, 0.0f, 1.0f));
         }
-    }
-
-    // EnableExplodeByDie
-
-    @Inject(method = "getWhiteOverlayProgress", at = @At("RETURN"), cancellable = true)
-    private void getWhiteOverlayProgressInject2(T livingEntity, float f, CallbackInfoReturnable<Float> cir) {
-        if (BEStyleWither.getConfig().isEnableExplodeByDie() && livingEntity instanceof WitherBoss witherBoss) {
-            float deathTime = BEStyleWitherUtils.getWitherDeltaDeathTime(witherBoss, f);
-            if (deathTime > 0) {
-                cir.setReturnValue(Mth.clamp(deathTime, 0f, 1f));
-            }
+        if (BEStyleWither.getConfig().isEnableExplodeByDie()) {
+            float deathProgress = ((BSWWitherRenderState) wither).beStyleWither$getDeathProgress();
+            if (deathProgress > 0.0f) cir.setReturnValue(Mth.clamp(deathProgress, 0.0f, 1.0f));
         }
-    }
-
-    @WrapWithCondition(
-            method = "setupRotations",
-            at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;mulPose(Lorg/joml/Quaternionf;)V", ordinal = 1)
-    )
-    private boolean setupRotationsWrapCondition(PoseStack instance, Quaternionf quaternionf, @Local(argsOnly = true) T livingEntity) {
-        return !BEStyleWither.getConfig().isEnableExplodeByDie() || !(livingEntity instanceof WitherBoss);
-    }
-
-    @WrapOperation(
-            method = "getOverlayCoords",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/OverlayTexture;v(Z)I", ordinal = 0)
-    )
-    private static int getOverlayCoordsWarp(boolean bl, Operation<Integer> original, @Local(argsOnly = true) LivingEntity livingEntity) {
-
-        if (BEStyleWither.getConfig().isEnableExplodeByDie() && livingEntity instanceof WitherBoss) {
-            return original.call(livingEntity.hurtTime > 0);
-        }
-
-        return original.call(bl);
     }
 }

@@ -221,7 +221,7 @@ public abstract class WitherBossMixin implements BEWitherBoss {
 
                     for (int i = 0; i < numOfSpawn; i++) {
                         WitherSkeleton ws = new WitherSkeleton(EntityTypes.WITHER_SKELETON, ths.level());
-                        ws.moveTo(ths.getX(), ths.getY(), ths.getZ(), randomSource.nextFloat() * 360.0F, 0.0F);
+                        ws.snapTo(ths.getX(), ths.getY(), ths.getZ(), randomSource.nextFloat() * 360.0F, 0.0F);
                         ws.finalizeSpawn(
                                 (ServerLevelAccessor) ths.level(),
                                 ((ServerLevel) ths.level()).getCurrentDifficultyAt(ths.blockPosition()),
