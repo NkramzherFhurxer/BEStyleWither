@@ -32,3 +32,11 @@ jobs:
 
       - name: Build Fabric mod
         run: ./gradlew :fabric:build --stacktrace --no-daemon
+        
+      - name: Upload compiled mod
+        uses: actions/upload-artifact@v4
+        with:
+          name: BEStyleWither-Fabric-26.3
+          path: fabric/build/libs/*.jar
+          if-no-files-found: error
+
