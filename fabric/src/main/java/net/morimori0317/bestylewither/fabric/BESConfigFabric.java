@@ -1,6 +1,7 @@
 package net.morimori0317.bestylewither.fabric;
 
 import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.AutoConfigClient;
 import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
@@ -73,6 +74,6 @@ public class BESConfigFabric implements ConfigData, BESConfig {
     }
 
     public static Screen createConfigScreen(Screen parent) {
-        return AutoConfig.getConfigScreen(BESConfigFabric.class, parent).get();
+        return AutoConfigClient.getConfigScreen(BESConfigFabric.class, parent).get();
     }
 }

@@ -7,7 +7,7 @@ import net.morimori0317.bestylewither.networking.BSWPackets;
 public class BSWPacketsFabric {
 
     public static void init() {
-        PayloadTypeRegistry.playS2C().register(BSWPackets.WHITHER_CHARGE_TYPE, BSWPackets.WITHER_CHARGE_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(BSWPackets.WHITHER_CHARGE_TYPE, BSWPackets.WITHER_CHARGE_CODEC);
     }
 
     public static void clientInit() {
