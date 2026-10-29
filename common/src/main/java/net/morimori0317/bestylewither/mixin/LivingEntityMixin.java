@@ -48,26 +48,15 @@ public abstract class LivingEntityMixin {
     @Shadow
     protected abstract void dropAllDeathLoot(ServerLevel serverLevel, DamageSource damageSource);
 
-    @WrapWithCondition(
-            method = "hurt",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;makeSound(Lnet/minecraft/sounds/SoundEvent;)V", ordinal = 0)
-    )
-    private boolean hurtWrapCondition(LivingEntity instance, SoundEvent soundEvent) {
-        if (BEStyleWither.getConfig().isEnableExplodeByDie()) {
-            return !(instance instanceof WitherBoss);
+    // Minecraft 26.3: damage handling no longer uses LivingEntity.hurt.
+    // Intercept the stable hurt-sound method instead of an old call site.
+    // This replaces the obsolete hurt / handleEntityEvent sound wrappers.
+    @Inject(method = "playHurtSound", at = @At("HEAD"), cancellable = true)
+    private void bestylewither$skipWitherHurtSound(DamageSource source, CallbackInfo ci) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (entity instanceof WitherBoss && BEStyleWither.getConfig().isEnableExplodeByDie()) {
+            ci.cancel();
         }
-        return true;
-    }
-
-    @WrapWithCondition(
-            method = "handleEntityEvent",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;playSound(Lnet/minecraft/sounds/SoundEvent;FF)V", ordinal = 0)
-    )
-    private boolean handleEntityEventWrapCondition(LivingEntity instance, SoundEvent soundEvent, float v1, float v2) {
-        if (BEStyleWither.getConfig().isEnableExplodeByDie()) {
-            return !(instance instanceof WitherBoss);
-        }
-        return true;
     }
 
     @WrapWithCondition(
