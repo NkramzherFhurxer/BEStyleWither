@@ -43,7 +43,7 @@ public abstract class LivingEntityMixin {
     public abstract float getVoicePitch();
 
     @Shadow
-    protected int lastHurtByPlayerTime;
+    protected int lastHurtByPlayerMemoryTime;
 
     @Shadow
     protected abstract void dropAllDeathLoot(ServerLevel serverLevel, DamageSource damageSource);
@@ -120,7 +120,7 @@ public abstract class LivingEntityMixin {
                     ths.playSound(soundevent, getSoundVolume() * 1.5f, getVoicePitch());
                 }
             } else if (this.deathTime >= ExplodeByDieConstants.EXPLODE_TICK && !ths.isRemoved()) {
-                lastHurtByPlayerTime = Math.max(lastHurtByPlayerTime, 1);
+                lastHurtByPlayerMemoryTime = Math.max(lastHurtByPlayerMemoryTime, 1);
 
                 DamageSource deathDamage = witherBossInstance.getExplodeByDieDeathDamageSource();
                 if (deathDamage == null) {
