@@ -14,7 +14,8 @@ public class PlayerMixin {
 
     @ModifyExpressionValue(
             method = "attack",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;is(Lnet/minecraft/tags/TagKey;)Z")
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;is(Lnet/minecraft/tags/TagKey;)Z"),
+            require = 0
     )
     private boolean attackModifyExpression(boolean original, @Local(argsOnly = true) Entity entity) {
 
